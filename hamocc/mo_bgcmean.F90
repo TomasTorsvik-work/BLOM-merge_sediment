@@ -46,6 +46,12 @@
 !     - added output of omegaA
 !     - added sediment bypass preprocessor option
 !
+!     Marco van Hulten  *GFI, UiB                2018-11-28
+!     - added support for decadal, centenial and millenial output
+!
+!     T.Torsvik,        *UiB-GFI, Bergen*        2020-07-29
+!     - merged changes from M.P.P. van Hulten sediment code
+!
 !     Purpose
 !     -------
 !     - declaration and memory allocation
@@ -60,6 +66,7 @@
       IMPLICIT NONE
 
       PRIVATE :: ii,jj,kk,idm,jdm,kdm,nbdy,ifp,isp,ilp                
+      PRIVATE :: nbgct_sed,nbgct_bur,bgct_sed,bgct_bur,i_bsc_m2d,i_bsc_sed,i_bsc_bur
       PUBLIC :: ks,ddm,depthslev,depthslev_bnds
 
 ! --- Averaging and writing frequencies for diagnostic output     
@@ -68,8 +75,10 @@
       REAL, DIMENSION(nbgcmax), SAVE ::  diagfq_bgc,filefq_bgc,bgcwrt
       INTEGER, DIMENSION(nbgcmax), SAVE :: nacc_bgc
       LOGICAL, DIMENSION(nbgcmax), SAVE :: diagmon_bgc,diagann_bgc,     &
-     &  filemon_bgc,fileann_bgc
- 
+     & diagdec_bgc,diagcen_bgc,diagmil_bgc,filemon_bgc,fileann_bgc,     &
+     & filedec_bgc,filecen_bgc,filemil_bgc
+!!!(TT: TODO) 'bgcwrt' was changed from 'real' to 'logical' in hamocc_sediment_legacy 
+
 ! --- Namelist for diagnostic output 
       INTEGER, DIMENSION(nbgcmax), SAVE ::                              &
      & SRF_KWCO2     =0    ,SRF_PCO2      =0    ,SRF_DMSFLUX   =0    ,  &
@@ -501,10 +510,19 @@
         ENDIF
         diagmon_bgc(n)=.false.
         diagann_bgc(n)=.false.
+        diagdec_bgc(n)=.false.
+        diagcen_bgc(n)=.false.
+        diagmil_bgc(n)=.false.
         IF (GLB_AVEPERIO(n).EQ.30) THEN
           diagmon_bgc(n)=.true.
         ELSEIF (GLB_AVEPERIO(n).EQ.365) THEN
           diagann_bgc(n)=.true.
+        ELSEIF (GLB_AVEPERIO(n).EQ.3650) THEN
+          diagdec_bgc(n)=.true.
+        ELSEIF (GLB_AVEPERIO(n).EQ.36500) THEN
+          diagcen_bgc(n)=.true.
+        ELSEIF (GLB_AVEPERIO(n).EQ.365000) THEN
+          diagmil_bgc(n)=.true.
         ENDIF
         IF (GLB_FILEFREQ(n).LT.0) THEN
           filefq_bgc(n)=-real(nstepinday)/GLB_FILEFREQ(n)
@@ -513,10 +531,19 @@
         ENDIF
         filemon_bgc(n)=.false.
         fileann_bgc(n)=.false.
+        filedec_bgc(n)=.false.
+        filecen_bgc(n)=.false.
+        filemil_bgc(n)=.false.
         IF (GLB_FILEFREQ(n).EQ.30) THEN
           filemon_bgc(n)=.true.
         ELSEIF (GLB_FILEFREQ(n).EQ.365) THEN
           fileann_bgc(n)=.true.
+        ELSEIF (GLB_FILEFREQ(n).EQ.3650) THEN
+          filedec_bgc(n)=.true.
+        ELSEIF (GLB_FILEFREQ(n).EQ.36500) THEN
+          filecen_bgc(n)=.true.
+        ELSEIF (GLB_FILEFREQ(n).EQ.365000) THEN
+          filemil_bgc(n)=.true.
         ENDIF
       ENDDO
 
