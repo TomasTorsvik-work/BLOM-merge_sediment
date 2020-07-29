@@ -28,7 +28,13 @@
 !     --------
 !     J.Schwinger,      *Uni Research, Bergen*   2018-04-12
 !     - removed unused variables
-!     
+!
+!     Marco van Hulten  *GFI, Bergen*            2018-04-18
+!     - added variables specific for sediment spin-up
+!
+!     T.Torsvik,        *UiB-GFI, Bergen*        2020-07-29
+!     - merged changes from M.P.P. van Hulten sediment code
+!
 !     Purpose
 !     -------
 !     - declaration
@@ -44,12 +50,29 @@
 
 ! Control variables
 
-      REAL    :: dtbgc            !  time step length [sec].
-      REAL    :: dtb              !  time step length [days].
+      REAL    :: dtbgc            !  HAMOCC time step length [sec].
+      REAL    :: dtb              !  HAMOCC time step length [days].
       INTEGER :: ndtdaybgc        !  time steps per day.
+      REAL    :: dtoff            !  off-line sediment time step length [sec].
+      REAL    :: dtsed            !  sediment time step length [sec].
 
       INTEGER :: ldtbgc           !  time step number from bgc restart file
       INTEGER :: ldtrunbgc        !  actual time steps of run.
+#if defined(SED_OFFLINE)
+      INTEGER :: nstep_in_month   !  accumulation counter for SED_OFFLINE.
+      INTEGER :: maxyear_sediment !  number of years for off-line sediment integration.
+      INTEGER :: maxyear_ocean    !  number of years for full MICOM-HAMOCC integration.
+      INTEGER :: nburst_last      !  nburst from the end of the previous simulation (startup: 0).
+      INTEGER :: nburst           !  counter of running sediment off-line.
+      LOGICAL :: lsed_rclim       !  whether to read bottom seawater climatology from file (nml).
+      LOGICAL :: lsed_wclim       !  whether to write bottom seawater climatology to file (nml).
+      LOGICAL :: lsed_spinup      !  whether to spin up the sediment (nml).
+      LOGICAL :: lread_clim       !  whether reading the climatology now.
+      LOGICAL :: lwrite_clim      !  whether writing the climatology now.
+      LOGICAL :: lcompleted_clim  !  whether we have a recent climatology available.
+#endif
+      LOGICAL :: lspinning_up_sed !  whether spinning up the sediment now.
+      INTEGER :: nyear_global     !  ocean model year number, including sediment().
 
       INTEGER :: isac             !  acceleration factor for sediment, read from namelist
 
