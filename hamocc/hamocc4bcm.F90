@@ -41,10 +41,16 @@
 !    related code-restructuring
 !  - added sediment bypass preprocessor option
 !
+!  M.M.P. van Hulten *GFI, Bergen*    2018-07-12
+!  - pulled out sediment code into proper sediment_step() routine
+!
 !  J.Schwinger,      *NORCE Climate, Bergen*   2020-05-28
 !  - restructuring of iHAMOCC code, cleanup parameter list
 !  - boundary conditions (dust, riverinput, N-deposition) are now passed as 
 !    an argument
+!
+!  T.Torsvik,        *UiB-GFI, Bergen*         2020-07-29
+!  - merged changes from M.P.P. van Hulten sediment code
 !
 ! Parameter list:
 ! ---------------
@@ -276,27 +282,33 @@
 #ifndef sedbypass
 ! jump over sediment if sedbypass is defined
 
-      CALL POWACH(kpie,kpje,kpke,kbnd,prho,omask,psao)
+      do j = 1, kpje
+         do i = 1, kpie
+            do l = 1, nocetra
+               ocetra_kbo(i,j,l) = ocetra(i,j,kbo(i,j),l)
+            enddo
+            psao_kbo(i,j) = psao(i,j,kbo(i,j))
+            prho_kbo(i,j) = prho(i,j,kbo(i,j))
+            co3_kbo(i,j) = co3(i,j,kbo(i,j))
+         enddo
+      enddo
+      call sediment_step(kpie, kpje, kpke, pddpo, pdlxp, pdlyp,         &
+         &               psao_kbo, prho_kbo, omask,                     &
+         &               ocetra_kbo, bolay, keqb,                       &
+         &               prorca, prcaca, silpro, produs, co3_kbo)
+      ! Do not add ocetra back assignment code: we update ocetra directly!
 
-
-#ifdef PBGC_CK_TIMESTEP 
-      IF (mnproc.eq.1) THEN
-      WRITE(io_stdo_bgc,*)' '
-      WRITE(io_stdo_bgc,*)'after POWACH: call INVENTORY'
-      ENDIF
-      CALL INVENTORY_BGC(kpie,kpje,kpke,pdlxp,pdlyp,pddpo,omask,0)
-#endif	 
-
-!     sediment is shifted once a day (on both time levels!)
-      IF(KLDTDAY .EQ. 1 .OR. KLDTDAY .EQ. 2) THEN
-         IF (mnproc.eq.1) THEN
-         WRITE(io_stdo_bgc,*)                                           &
-     &   'Sediment shifting ...'
-         ENDIF
-
-         CALL SEDSHI(kpie,kpje,omask)
-
-      ENDIF
+!!!(TT: TODO) Check if sediment shift is consistent with implementation in sediment_step
+!!     sediment is shifted once a day (on both time levels!)
+!      IF(KLDTDAY .EQ. 1 .OR. KLDTDAY .EQ. 2) THEN
+!         IF (mnproc.eq.1) THEN
+!         WRITE(io_stdo_bgc,*)                                           &
+!     &   'Sediment shifting ...'
+!         ENDIF
+!
+!         CALL SEDSHI(kpie,kpje,omask)
+!
+!      ENDIF
 #endif
 
 
